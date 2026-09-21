@@ -82,7 +82,7 @@ public sealed class FtpTransferService
 
         try
         {
-            var listing = await client.GetListing(settings.RemoteFolder, token);
+            var listing = await client.GetListing(settings.RemoteFolder, token: token);
             var prefix = SanitizeRemotePrefix(settings.ArchivePrefix) + "_";
 
             var archives = listing

@@ -21,7 +21,7 @@ jobs:
         run: dotnet restore .\ftp_backup.sln -r win-x64
 
       - name: Build
-        run: dotnet build .\ftp_backup.sln -c Release -r win-x64 --no-restore
+        run: dotnet build .\ftp_backup.sln -c Release --no-restore
 
       - name: Publish service
         run: dotnet publish .\src\FtpBackup.Service\FtpBackup.Service.csproj -c Release -r win-x64 --self-contained true --no-restore -o .\artifacts\service

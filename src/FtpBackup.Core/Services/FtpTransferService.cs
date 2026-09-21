@@ -140,12 +140,17 @@ public sealed class FtpTransferService
                 remoteTemp,
                 FtpRemoteExists.Overwrite,
                 createRemoteDir: true,
-                verifyOptions: FtpVerify.Retry | FtpVerify.Size,
+                verifyOptions: FtpVerify.None,
                 progress: ftpProgress,
                 token: token);
 
             if (status != FtpStatus.Success && status != FtpStatus.Skipped)
                 throw new IOException($"Servidor FTP retornou status de upload: {status}");
+
+            var localSize = new FileInfo(archive.ArchivePath).Length;
+            var remoteSize = await client.GetFileSize(remoteTemp, token: token);
+            if (remoteSize != localSize)
+                throw new IOException($"Verificação de tamanho falhou. Local={localSize} bytes; remoto={remoteSize} bytes.");
 
             progress?.Invoke(93, "Finalizando arquivo remoto");
             var moved = await client.MoveFile(remoteTemp, remoteFinal, FtpRemoteExists.Overwrite, token);
@@ -163,11 +168,16 @@ public sealed class FtpTransferService
                     remoteShaTemp,
                     FtpRemoteExists.Overwrite,
                     createRemoteDir: true,
-                    verifyOptions: FtpVerify.Retry | FtpVerify.Size,
+                    verifyOptions: FtpVerify.None,
                     token: token);
 
                 if (shaStatus != FtpStatus.Success && shaStatus != FtpStatus.Skipped)
                     throw new IOException($"Falha ao enviar SHA-256: {shaStatus}");
+
+                var localShaSize = new FileInfo(localSha).Length;
+                var remoteShaSize = await client.GetFileSize(remoteShaTemp, token: token);
+                if (remoteShaSize != localShaSize)
+                    throw new IOException($"Verificação do SHA-256 falhou. Local={localShaSize} bytes; remoto={remoteShaSize} bytes.");
 
                 if (!await client.MoveFile(remoteShaTemp, remoteSha, FtpRemoteExists.Overwrite, token))
                     throw new IOException("Falha ao finalizar o arquivo SHA-256 remoto.");
